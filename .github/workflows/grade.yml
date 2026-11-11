@@ -1,0 +1,78 @@
+name: Grade assignment
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  grade:
+    name: Grade tasks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install grading dependencies
+        run: python -m pip install numpy pytest
+
+      - name: Grade Task 1
+        id: task1
+        continue-on-error: true
+        run: python -m pytest -q tests/grade_task1.py
+
+      - name: Grade Task 2
+        id: task2
+        continue-on-error: true
+        run: python -m pytest -q tests/grade_task2.py
+
+      - name: Grade Task 3
+        id: task3
+        continue-on-error: true
+        run: python -m pytest -q tests/grade_task3.py
+
+      - name: Grade Task 4
+        id: task4
+        continue-on-error: true
+        run: python -m pytest -q tests/grade_task4.py
+
+      - name: Write grading summary
+        if: always()
+        env:
+          TASK1_RESULT: ${{ steps.task1.outcome }}
+          TASK2_RESULT: ${{ steps.task2.outcome }}
+          TASK3_RESULT: ${{ steps.task3.outcome }}
+          TASK4_RESULT: ${{ steps.task4.outcome }}
+        run: |
+          {
+            echo "## Assignment grading results"
+            echo
+            echo "| Task | Result |"
+            echo "| --- | --- |"
+            echo "| Task 1: 1D output size | ${TASK1_RESULT} |"
+            echo "| Task 2: 1D convolution | ${TASK2_RESULT} |"
+            echo "| Task 3: 2D output size | ${TASK3_RESULT} |"
+            echo "| Task 4: 2D convolution | ${TASK4_RESULT} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any task did not pass
+        if: always()
+        env:
+          TASK1_RESULT: ${{ steps.task1.outcome }}
+          TASK2_RESULT: ${{ steps.task2.outcome }}
+          TASK3_RESULT: ${{ steps.task3.outcome }}
+          TASK4_RESULT: ${{ steps.task4.outcome }}
+        run: |
+          for result in "$TASK1_RESULT" "$TASK2_RESULT" "$TASK3_RESULT" "$TASK4_RESULT"; do
+            if [ "$result" != "success" ]; then
+              exit 1
+            fi
+          done
