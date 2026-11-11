@@ -15,8 +15,14 @@ import numpy as np
 # Your code here:
 # -----------------------------------------------
 
+# note: only want one convolution
+# note: no padding means padding = valid (no additional 0s at boarder)
+
 def compute_output_size_1d(input_array, kernel_array):
-    pass
+    if input_array.ndim != 1 or kernel_array.ndim != 1:
+        raise ValueError
+    else:
+        return (len(input_array) - len(kernel_array) + 1)
 
 
 # -----------------------------------------------
@@ -35,9 +41,17 @@ print(compute_output_size_1d(input_array, kernel_array))
 # -----------------------------------------------
 
 def convolve_1d(input_array, kernel_array):
-    # Tip: start by initializing an empty output array (you can use your function above to calculate the correct size).
-    # Then fill the cells in the array with a loop.
-    pass
+    l = len(input_array) - len(kernel_array) + 1
+    conv = np.zeros(l)        # array of the right length with 0s, for filling later
+    for i in range(l):
+        a = input_array[i:len(kernel_array) + i] 
+        conv[i] = a.dot(kernel_array)  # could also do a @ kernel_array 
+
+    return conv
+
+# note: for 1D arrays, a.dot(b) / a @ b = sum of matching positions multiplied (dot product).
+# In 2D, @ / .dot() do matrix multiplication (row * column), which is NOT convolution.
+# For 2D convolution: multiply matching positions and add them up → np.sum(patch * kernel)
 
 # -----------------------------------------------
 # Another tip: write test cases like this, so you can easily test your function.
@@ -56,7 +70,12 @@ print(convolve_1d(input_array, kernel_array))
 # -----------------------------------------------
 
 def compute_output_size_2d(input_matrix, kernel_matrix):
-    pass
+    if np.ndim(input_matrix) == 2 and np.ndim(kernel_matrix) == 2:
+        h = input_matrix.shape[0] - kernel_matrix.shape[0] + 1 #shape gives tuple index 0 gives first value (row #)
+        w = input_matrix.shape[1] - kernel_matrix.shape[1] + 1
+        return (h, w)
+    else:
+        raise ValueError
 
 
 # -----------------------------------------------
@@ -70,9 +89,17 @@ def compute_output_size_2d(input_matrix, kernel_matrix):
 # Your code here:
 # -----------------------------------------------
 def convolute_2d(input_matrix, kernel_matrix):
-    # Tip: same tips as above, but you might need a nested loop here in order to
-    # define which parts of the input matrix need to be multiplied with the kernel matrix.
-    pass
+    size = compute_output_size_2d(input_matrix, kernel_matrix)
+    hkern = kernel_matrix.shape[0]
+    wkern = kernel_matrix.shape[1]
+    conv = np.zeros(size)
+
+    for i in range(size[0]):
+        for j in range(size[1]):
+            a = input_matrix[i:hkern + i, j:wkern + j]
+            conv[i, j] = np.sum(a * kernel_matrix)
+
+    return conv
 
 
 # -----------------------------------------------
